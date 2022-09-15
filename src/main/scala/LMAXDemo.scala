@@ -1,5 +1,6 @@
 package com.demo.lmax
 
+import DemoUtils.*
 import model.MyEvent
 
 import com.lmax.disruptor.*
@@ -28,7 +29,7 @@ object LMAXDemo {
 
     setupEventHandler(disruptor, threads)
 
-    DemoUtils.time(iterations, {
+    time(iterations, {
       disruptor.start()
 
       val latch = new CountDownLatch(iterations)

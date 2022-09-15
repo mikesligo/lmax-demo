@@ -1,14 +1,15 @@
 package com.demo.lmax
 package queue
 
+import DemoUtils.*
 import model.MyEvent
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.{ArrayBlockingQueue, ConcurrentLinkedQueue, CountDownLatch}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import concurrent.ExecutionContext.Implicits.global
 
 object ConcurrentQueueDemo {
   @main def main(): Unit =
@@ -19,7 +20,7 @@ object ConcurrentQueueDemo {
 
     val latch = new CountDownLatch(iterations)
 
-    DemoUtils.time(iterations, {
+    time(iterations, {
       Future {
         for {
           i <- 0 until iterations
