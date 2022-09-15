@@ -1,19 +1,18 @@
 package com.demo.lmax
 
-import com.lmax.disruptor.{BlockingWaitStrategy, BusySpinWaitStrategy, EventFactory, EventHandler, EventTranslator, RingBuffer}
-import com.lmax.disruptor.dsl.{Disruptor, ProducerType}
+import model.{MyEvent}
 
-import java.util.concurrent.{CountDownLatch, CyclicBarrier, ExecutorService, Executors, ThreadFactory, ThreadPoolExecutor}
+import com.lmax.disruptor.*
+import com.lmax.disruptor.dsl.{Disruptor, ProducerType}
 import com.lmax.disruptor.util.DaemonThreadFactory
 import sun.misc.Unsafe
 
 import java.lang
+import java.util.concurrent.*
 import java.util.concurrent.locks.LockSupport
 import scala.language.postfixOps
 
-case class MyEvent(var i: Long = 0)
-
-object LMAXDemo
+object LMAXDemo {
   @main def main: Unit =
     val ringBufferSize = 1024
     val threads = 4
@@ -29,32 +28,29 @@ object LMAXDemo
 
     setupEventHandler(disruptor, threads)
 
-    disruptor.start()
+    DemoUtils.time(iterations, {
+      disruptor.start()
 
-    val latch = new CountDownLatch(iterations)
-    val translator = new DepopTranslator(latch)
+      val latch = new CountDownLatch(iterations)
+      val translator = new DepopTranslator(latch)
 
-    val start = System.nanoTime()
+      for {
+        _ <- 0 until iterations
+      } yield disruptor.publishEvent(translator)
 
-    for {
-      i <- 0 until iterations
-    } yield disruptor.publishEvent(translator)
-
-    latch.await()
-    val ringBuffer = disruptor.getRingBuffer
-    while (ringBuffer.getCursor < (iterations - 1)) {
-      LockSupport.parkNanos(100)
-    }
-
-    val end = System.nanoTime()
-    println(s"Time to process $iterations events was ${(end - start) / 1_000_000_000.0} s")
-
+      latch.await()
+      val ringBuffer = disruptor.getRingBuffer
+      while (ringBuffer.getCursor < (iterations - 1)) {
+        LockSupport.parkNanos(100)
+      }
+    })
 
   def setupEventHandler(disruptor: Disruptor[MyEvent], threads: Int) =
     for {
       i <- 0 until threads
       handler = new DemoEventHandler
     } disruptor.handleEventsWith(handler)
+}
 
 class DemoEventHandler extends EventHandler[MyEvent] {
   override def onEvent(event: MyEvent, sequence: Long, endOfBatch: Boolean): Unit = {}
