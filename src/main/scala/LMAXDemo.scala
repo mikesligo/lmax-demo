@@ -16,7 +16,7 @@ object LMAXDemo {
   @main def main: Unit =
     val ringBufferSize = 8192
     val threads = 4
-    val iterations = 1000 * 1000 * 100
+    val iterations = 100_000_000
 
     val disruptor =
       new Disruptor[MyEvent](

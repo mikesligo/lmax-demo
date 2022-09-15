@@ -14,7 +14,7 @@ object ConcurrentQueueDemo {
   @main def main(): Unit =
     // ArrayBlockingQueue sucks, the blocking is awful
     val queue = new ConcurrentLinkedQueue[MyEvent]()
-    val iterations = 1000 * 1000 * 2
+    val iterations = 2_000_000
     val threads = 4
 
     val latch = new CountDownLatch(iterations)
