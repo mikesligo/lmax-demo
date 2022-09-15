@@ -1,17 +1,20 @@
 package com.demo.lmax
 package queue
 
-import model.{MyEvent}
+import model.MyEvent
 
-import java.util.concurrent.{ConcurrentLinkedQueue, CountDownLatch}
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.LockSupport
+import java.util.concurrent.{ArrayBlockingQueue, ConcurrentLinkedQueue, CountDownLatch}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import concurrent.ExecutionContext.Implicits.global
 
 object ConcurrentQueueDemo {
   @main def main(): Unit =
-    val queue = new ConcurrentLinkedQueue[MyEvent]
-    val iterations = 1000 * 1000 * 50
+    // ArrayBlockingQueue sucks, the blocking is awful
+    val queue = new ConcurrentLinkedQueue[MyEvent]()
+    val iterations = 1000 * 1000 * 2
     val threads = 4
 
     val latch = new CountDownLatch(iterations)
@@ -20,10 +23,11 @@ object ConcurrentQueueDemo {
       Future {
         for {
           i <- 0 until iterations
-          event = MyEvent(i)
-          _ = queue.add(event)
-          _ = latch.countDown()
-        } yield ()
+        } yield {
+          val event = MyEvent(i)
+          queue.add(event)
+          latch.countDown()
+        }
       }
 
       val parallelWork = for {

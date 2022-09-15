@@ -1,6 +1,6 @@
 package com.demo.lmax
 
-import model.{MyEvent}
+import model.MyEvent
 
 import com.lmax.disruptor.*
 import com.lmax.disruptor.dsl.{Disruptor, ProducerType}
@@ -14,7 +14,7 @@ import scala.language.postfixOps
 
 object LMAXDemo {
   @main def main: Unit =
-    val ringBufferSize = 1024
+    val ringBufferSize = 8192
     val threads = 4
     val iterations = 1000 * 1000 * 100
 
