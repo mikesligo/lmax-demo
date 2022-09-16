@@ -13,10 +13,11 @@ import scala.concurrent.{Await, Future}
 
 object ConcurrentQueueDemo {
   @main def main(): Unit =
-    // ArrayBlockingQueue sucks, the blocking is awful
-    val queue = new ConcurrentLinkedQueue[MyEvent]()
-    val iterations = 2_000_000
-    val threads = 4
+    // ConcurrentLinkedQueue is better
+    val iterations = 100_000_000
+    val bufferSize = 8192
+    val numThreads = 4
+    val queue = new ArrayBlockingQueue[MyEvent](bufferSize)
 
     val latch = new CountDownLatch(iterations)
 
@@ -26,22 +27,24 @@ object ConcurrentQueueDemo {
           i <- 0 until iterations
         } yield {
           val event = MyEvent(i)
-          queue.add(event)
+          queue.offer(event)
           latch.countDown()
         }
       }
 
       val parallelWork = for {
-        _ <- 0 until threads
+        _ <- 0 until numThreads
       } yield Future {
-        queue.poll()
+        while(true) queue.poll()
       }
 
       latch.await()
 
       println("Published messages to queue")
 
-      Await.result(Future.sequence(parallelWork), Duration.Inf)
+      while(queue.size() != 0) {
+        LockSupport.parkNanos(1000)
+      }
     })
 
 }
