@@ -27,7 +27,7 @@ object LMAXDemo {
         ProducerType.SINGLE,
         new BusySpinWaitStrategy())
 
-    setupEventHandler(disruptor, NUM_THREADS)
+    setupConsumers(disruptor, NUM_THREADS)
 
     time(ITERATIONS,
       {
@@ -48,7 +48,7 @@ object LMAXDemo {
         }
       })
 
-  def setupEventHandler(disruptor: Disruptor[MyEvent], threads: Int) =
+  def setupConsumers(disruptor: Disruptor[MyEvent], threads: Int) =
     (0 until threads) foreach { _ =>
       val handler = new DemoEventHandler
       disruptor.handleEventsWith(handler)
