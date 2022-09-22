@@ -14,34 +14,35 @@ import java.util.concurrent.locks.LockSupport
 import scala.language.postfixOps
 
 object LMAXDemo {
-  @main def main: Unit =
-    val ringBufferSize = 8192
-    val threads = 4
-    val iterations = 100_000_000
+  val BUFFER_SIZE = 8192
+  val NUM_THREADS = 4
+  val ITERATIONS = 100_000_000
 
+  @main def main: Unit =
     val disruptor =
       new Disruptor[MyEvent](
         () => MyEvent(),
-        ringBufferSize,
+        BUFFER_SIZE,
         DaemonThreadFactory.INSTANCE,
         ProducerType.SINGLE,
         new BusySpinWaitStrategy())
 
-    setupEventHandler(disruptor, threads)
+    setupEventHandler(disruptor, NUM_THREADS)
 
-    time(iterations, {
+    time(ITERATIONS,
+      {
       disruptor.start()
 
-      val latch = new CountDownLatch(iterations)
+      val latch = new CountDownLatch(ITERATIONS)
       val translator = new DepopTranslator(latch)
 
       for {
-        _ <- 0 until iterations
+        _ <- 0 until ITERATIONS
       } yield disruptor.publishEvent(translator)
 
       latch.await()
       val ringBuffer = disruptor.getRingBuffer
-      while (ringBuffer.getCursor < (iterations - 1)) {
+      while (ringBuffer.getCursor < (ITERATIONS - 1)) {
         LockSupport.parkNanos(100)
       }
     })

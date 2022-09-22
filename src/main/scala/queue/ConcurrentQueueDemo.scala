@@ -12,19 +12,19 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 object ConcurrentQueueDemo {
+
+  import LMAXDemo.*
+
   @main def main(): Unit =
-    // ConcurrentLinkedQueue is better
-    val iterations = 100_000_000
-    val bufferSize = 8192
-    val numThreads = 4
-    val queue = new ArrayBlockingQueue[MyEvent](bufferSize)
+    val queue = new ArrayBlockingQueue[MyEvent](BUFFER_SIZE)
 
-    val latch = new CountDownLatch(iterations)
+    val latch = new CountDownLatch(ITERATIONS)
 
-    time(iterations, {
+    time(ITERATIONS,
+      {
       Future {
         for {
-          i <- 0 until iterations
+          i <- 0 until ITERATIONS
         } yield {
           val event = MyEvent(i)
           queue.offer(event)
@@ -32,8 +32,8 @@ object ConcurrentQueueDemo {
         }
       }
 
-      val parallelWork = for {
-        _ <- 0 until numThreads
+      for {
+        _ <- 0 until NUM_THREADS
       } yield Future {
         while(true) queue.poll()
       }
@@ -43,7 +43,7 @@ object ConcurrentQueueDemo {
       println("Published messages to queue")
 
       while(queue.size() != 0) {
-        LockSupport.parkNanos(1000)
+        LockSupport.parkNanos(100)
       }
     })
 

@@ -12,14 +12,13 @@ import scala.concurrent.Future
 object CounterDemo {
   @main def main: Unit =
     val iterations = 1_000_000_000
-    @volatile var counter = 0
+    var counter = 0
 
-    // normal (6s)
-    // 10 iterations
+    // normal (6s) (volatile doesn't really help because the opposing thread isn't blocked)
     // add volatile (22s)
     // add synchronised (33s)
     // use AtomicLong with CAS (18s)
-    def countToHalf = (0 until iterations / 10).foreach { _ => {
+    def countToHalf = (0 until iterations / 2).foreach { _ => {
       counter = counter + 1
     } }
 
