@@ -31,27 +31,28 @@ object LMAXDemo {
 
     time(ITERATIONS,
       {
-      disruptor.start()
+        disruptor.start()
 
-      val latch = new CountDownLatch(ITERATIONS)
-      val translator = new DepopTranslator(latch)
+        val latch = new CountDownLatch(ITERATIONS)
+        val translator = new DepopTranslator(latch)
 
-      for {
-        _ <- 0 until ITERATIONS
-      } yield disruptor.publishEvent(translator)
+        runIterationTimes {
+          disruptor.publishEvent(translator)
+        }
 
-      latch.await()
-      val ringBuffer = disruptor.getRingBuffer
-      while (ringBuffer.getCursor < (ITERATIONS - 1)) {
-        LockSupport.parkNanos(100)
-      }
-    })
+        latch.await()
+
+        val ringBuffer = disruptor.getRingBuffer
+        while (ringBuffer.getCursor < (ITERATIONS - 1)) {
+          LockSupport.parkNanos(100)
+        }
+      })
 
   def setupEventHandler(disruptor: Disruptor[MyEvent], threads: Int) =
-    for {
-      i <- 0 until threads
-      handler = new DemoEventHandler
-    } disruptor.handleEventsWith(handler)
+    (0 until threads) foreach { _ =>
+      val handler = new DemoEventHandler
+      disruptor.handleEventsWith(handler)
+    }
 }
 
 class DemoEventHandler extends EventHandler[MyEvent] {
@@ -61,7 +62,7 @@ class DemoEventHandler extends EventHandler[MyEvent] {
 class DepopTranslator(latch: CountDownLatch) extends EventTranslator[MyEvent] {
 
   override def translateTo(event: MyEvent, sequence: Long): Unit = {
-    event.i = sequence
+    event.someNumber = sequence
     latch.countDown()
   }
 }

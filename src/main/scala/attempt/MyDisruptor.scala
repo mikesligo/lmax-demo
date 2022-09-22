@@ -42,7 +42,7 @@ case class MyProducer(buffer: MyBuffer) {
 
   def produce(index: Int) =
     val entry = buffer.entryFor(producerSlot)
-    entry.i = index
+    entry.someNumber = index
     buffer.consumerCursor = producerSlot
     producerSlot = producerSlot + 1
 }

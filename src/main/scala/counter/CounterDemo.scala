@@ -9,15 +9,16 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.Future
 
+// normal (6s) (volatile doesn't really help because the opposing thread isn't blocked)
+// add volatile (22s)
+// add synchronised (33s)
+// use AtomicLong with CAS (18s)
+
 object CounterDemo {
   @main def main: Unit =
     val iterations = 1_000_000_000
     var counter = 0
 
-    // normal (6s) (volatile doesn't really help because the opposing thread isn't blocked)
-    // add volatile (22s)
-    // add synchronised (33s)
-    // use AtomicLong with CAS (18s)
     def countToHalf = (0 until iterations / 2).foreach { _ => {
       counter = counter + 1
     } }

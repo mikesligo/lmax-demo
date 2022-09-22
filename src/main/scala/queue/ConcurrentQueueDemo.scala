@@ -7,9 +7,10 @@ import model.MyEvent
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.{ArrayBlockingQueue, ConcurrentLinkedQueue, CountDownLatch}
+import scala.concurrent
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object ConcurrentQueueDemo {
 
@@ -22,29 +23,25 @@ object ConcurrentQueueDemo {
 
     time(ITERATIONS,
       {
-      Future {
-        for {
-          i <- 0 until ITERATIONS
-        } yield {
-          val event = MyEvent(i)
-          queue.offer(event)
-          latch.countDown()
+        Future {
+          runIterationTimes {
+            val event = MyEvent()
+            queue.offer(event)
+            latch.countDown()
+          }
         }
-      }
 
-      for {
-        _ <- 0 until NUM_THREADS
-      } yield Future {
-        while(true) queue.poll()
-      }
+        runOnDifferentThreads {
+          while(true) queue.poll()
+        }
 
-      latch.await()
+        latch.await()
 
-      println("Published messages to queue")
+        println("Published messages to queue")
 
-      while(queue.size() != 0) {
-        LockSupport.parkNanos(100)
-      }
-    })
+        while(queue.size() != 0) {
+          LockSupport.parkNanos(100)
+        }
+      })
 
 }
